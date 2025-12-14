@@ -1,10 +1,15 @@
 # Settingfil-generator for telefonsystem
 
-Et program for å generere konfigurasjonsfiler for Helselogistikk. Denne applikasjonen lager både `.phn`-filer for Avaya og `.json`-filer for Ascom basert på en nummerserie, med støtte for innhenting av rolle- og brukernavn via xlsx-opplasting.
+Et program for å generere konfigurasjonsfiler for Helselogistikk. Applikasjonen lager både `.phn`-filer for Avaya og `.json`-filer for Ascom.
+
+Løsningen støtter to arbeidsmåter via faner:
+
+- **Singel opprettelse**: Generer filer for én telefon (IMEI + telefonnummer + firstname/lastname)
+- **Multiple opprettelser**: Generer filer fra nummerserie eller via import av `.xlsx`
 
 ## Funksjoner
 
-### 📱 Fildeling
+### 📱 Filer som genereres
 - **Avaya `.phn`-filer** med kryptografisk sikre passord:
   ```
   SET SIPUSERNAME [nummer]
@@ -17,15 +22,20 @@ Et program for å generere konfigurasjonsfiler for Helselogistikk. Denne applika
   {"voip_device_id": "[nummer]"}
   ```
 
-### 📊 Rollemapping (valgfritt)
-- Last opp xlsx-fil med:
-  - **Kolonne A**: Fornavn (firstname)
-  - **Kolonne B**: Etternavn (lastname) - brukes som HL-kode hvis utfylt
-- Genererer automatisk regneark med:
-  - **Kolonne A**: Navn (fra opplastet fil)
-  - **Kolonne B**: HL-kode (fra kolonne B i import, eller standard "HL [KODE]")
-  - **Kolonne C**: Telefonnummer
-  - **Kolonne D**: Generert passord
+### 📊 Import/rollemapping (valgfritt)
+
+Ved **Multiple opprettinger** kan du laste opp en `.xlsx`-fil **uten headere**:
+
+- **Kolonne A**: IMEI (15 siffer)
+- **Kolonne B**: Navn (brukes som `FIRSTNAME` i output)
+- **Kolonne C**: Foretak + lokasjon (brukes som `LASTNAME` i output, og som code i filstien)
+
+Applikasjonen genererer samtidig et output-regneark (`.xlsx`) med kolonner:
+
+- **FIRSTNAME**
+- **LASTNAME**
+- **Nummer**
+- **Passord**
 
 ### 🔐 Sikkerhet
 - Passord genereres med `secrets`-modulen (kryptografisk sikker)
@@ -74,16 +84,41 @@ python app.py
 Åpne nettleseren og gå til `http://localhost:5000`
 
 ### 2. Generer filer
-1. **Foretakskode**: Skriv inn kode (f.eks. VVHF, OUS, LAB)
-2. **Nummerserie**: Velg start- og sluttnummer
-3. **Navn (valgfritt)**: Last opp xlsx-fil med fornavn i kolonne A og etternavn/HL-kode i kolonne B
-4. Klikk "Generer Filer"
+
+#### A) Singel opprettelse
+
+Fyll inn:
+
+- **Foretak**
+- **IMEI (15 siffer)**
+- **Telefonnummer**
+- **Firstname**
+- **Lastname**
+
+Klikk **Generer Filer**.
+
+**Merk:**
+
+- `.phn` og `.json` filnavn er IMEI (`<imei>.phn` og `<imei>.json`)
+- Innholdet bruker telefonnummer som SIP-brukernavn (`SIPUSERNAME`) og som `voip_device_id` i `.json`
+- ZIP-filen navngis: `code_phone_yyyymmddHHMM.zip`
+
+#### B) Multiple opprettinger
+
+Du kan enten:
+
+- Generere fra nummerserie (start/slutt), eller
+- Laste opp `.xlsx` (se formatet over)
+
+Klikk **Generer Filer**.
+
+ZIP-filen navngis: `code_start_end_yyyymmddHHMM.zip`
 
 ### 3. Last ned
 Når genereringen er ferdig, lastes ned en ZIP-fil som inneholder:
 - `/avaya/` - Alle `.phn`-filer
 - `/ascom/` - Alle `.json`-filer  
-- `output_[kode].xlsx` - Regneark med output (hvis xlsx ble lastet opp)
+- `output_[kode].xlsx` - Regneark med output
 
 ## Teknologi
 

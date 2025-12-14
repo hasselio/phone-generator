@@ -11,75 +11,140 @@
 <body class="min-h-screen flex items-center justify-center p-4">
     <div class="container">
         <div class="card fade-in">
-            <h1 class="text-center mb-6"><i class="fas fa-wrench mr-2"></i> Opprett settingfiler</h1>
-        
-        <div class="space-y-6">
-            <div class="form-group">
-                <label for="code" class="form-label">Foretak (vil inkluderes i filsti.)</label>
-                <div class="relative">
-                    <input type="text" id="code" class="w-full" placeholder="F.eks. VVHF, OUS eller LAB" required>
-                    <i class="fas fa-building absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                </div>
+            <div class="tabs">
+                <button type="button" class="tab-btn active" data-tab="single">Singel opprettelse</button>
+                <button type="button" class="tab-btn" data-tab="multiple">Multiple opprettelser</button>
             </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group">
-                    <label for="start" class="form-label">Nummerserie start</label>
-                    <div class="relative">
-                        <input type="number" id="start" class="w-full" placeholder="587_______">
-                        <i class="fas fa-sort-numeric-up-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+
+            <h3 class="text-center mb-6"><i class="fas fa-wrench mr-2"></i> Opprett settingfiler og importgrunnlag til Aura</h3>
+
+            <div class="space-y-6">
+                <div id="tab-single" class="tab-panel">
+                    <div class="form-group">
+                        <label for="codeSingle" class="form-label">Foretak (vil inkluderes i filsti.)</label>
+                        <div class="relative">
+                            <input type="text" id="codeSingle" class="w-full" placeholder="F.eks. VVHF, OUS eller LAB" required>
+                            <i class="fas fa-building absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="imeiSingle" class="form-label">IMEI (15 siffer)</label>
+                            <div class="relative">
+                                <input type="text" id="imeiSingle" class="w-full" placeholder="358625..." required>
+                                <i class="fas fa-hashtag absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phoneSingle" class="form-label">Telefonnummer</label>
+                            <div class="relative">
+                                <input type="text" id="phoneSingle" class="w-full" placeholder="5870______" required>
+                                <i class="fas fa-phone absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="firstnameSingle" class="form-label">Firstname</label>
+                            <div class="relative">
+                                <input type="text" id="firstnameSingle" class="w-full" placeholder="MED Koord. spl." required>
+                                <i class="fas fa-user absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastnameSingle" class="form-label">Lastname</label>
+                            <div class="relative">
+                                <input type="text" id="lastnameSingle" class="w-full" placeholder="OU RAD" required>
+                                <i class="fas fa-user absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <button id="generateSingleBtn" class="btn btn-primary w-full py-3">
+                            <i class="fas fa-file-export mr-2"></i>Generer Filer
+                        </button>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="end" class="form-label">Nummerserie slutt</label>
-                    <div class="relative">
-                        <input type="number" id="end" class="w-full" placeholder="587_______">
-                        <i class="fas fa-sort-numeric-down-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+
+                <div id="tab-multiple" class="tab-panel hidden">
+                    <div class="form-group">
+                        <label for="code" class="form-label">Foretak (vil inkluderes i filsti.)</label>
+                        <div class="relative">
+                            <input type="text" id="code" class="w-full" placeholder="F.eks. VVHF, OUS eller LAB" required>
+                            <i class="fas fa-building absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="start" class="form-label">Nummerserie start</label>
+                            <div class="relative">
+                                <input type="number" id="start" class="w-full" placeholder="5870_______">
+                                <i class="fas fa-sort-numeric-up-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="end" class="form-label">Nummerserie slutt</label>
+                            <div class="relative">
+                                <input type="number" id="end" class="w-full" placeholder="5870_______">
+                                <i class="fas fa-sort-numeric-down-alt absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="roleFile" class="form-label">Import (last opp .xlsx-fil uten headere)</label>
+                        <ul class="form-hint-list">
+                            <li>Kolonne A: IMEI (15 siffer)</li>
+                            <li>Kolonne B: Navn</li>
+                            <li>Kolonne C: Foretak + lokasjon (VV DRM)</li>
+                        </ul>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="roleFile" accept=".xlsx" class="file-input">
+                            <label for="roleFile" class="file-label">
+                                <i class="fas fa-file-excel mr-2"></i>
+                                <span id="fileNameDisplay">Velg xlsx-fil...</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <button id="generateBtn" class="btn btn-primary w-full py-3">
+                            <i class="fas fa-file-export mr-2"></i>Generer Filer
+                        </button>
                     </div>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="roleFile" class="form-label">Navn (valgfritt - xlsx firstname i kol A og lastname i kol B)</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" id="roleFile" accept=".xlsx" class="file-input">
-                    <label for="roleFile" class="file-label">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        <span id="fileNameDisplay">Velg xlsx-fil...</span>
-                    </label>
+                
+                <div id="status" class="alert alert-info hidden">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        <span>Genererer filer, vennligst vent...</span>
+                    </div>
+                    <div class="progress-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <p id="progressText" class="text-sm mt-2 text-right">0% ferdig</p>
                 </div>
-            </div>
-            
-            <div class="mt-8">
-                <button id="generateBtn" class="btn btn-primary w-full py-3">
-                    <i class="fas fa-file-export mr-2"></i>Generer Filer
-                </button>
-            </div>
-            
-            <div id="status" class="alert alert-info hidden">
-                <div class="flex items-center mb-2">
-                    <i class="fas fa-spinner fa-spin mr-2"></i>
-                    <span>Genererer filer, vennligst vent...</span>
+                
+                <div id="result" class="alert alert-success hidden">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <p class="font-medium">Ferdig!</p>
+                    </div>
+                    <p class="mt-2">Klikk på knappen under for å laste ned filene.</p>
+                    <a id="downloadBtn" href="#" class="btn btn-primary w-full mt-4 py-3">
+                        <i class="fas fa-download mr-2"></i>Last ned ZIP-fil
+                    </a>
                 </div>
-                <div class="progress-container">
-                    <div id="progressBar" class="progress-bar"></div>
+                
+                <div id="error" class="hidden mt-4 p-4 bg-red-100 text-red-800 rounded">
+                    <p>En feil oppstod under generering av filer.</p>
                 </div>
-                <p id="progressText" class="text-sm mt-2 text-right">0% ferdig</p>
-            </div>
-            
-            <div id="result" class="alert alert-success hidden">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <p class="font-medium">Ferdig!</p>
-                </div>
-                <p class="mt-2">Klikk på knappen under for å laste ned filene.</p>
-                <a id="downloadBtn" href="#" class="btn btn-primary w-full mt-4 py-3">
-                    <i class="fas fa-download mr-2"></i>Last ned ZIP-fil
-                </a>
-            </div>
-            
-            <div id="error" class="hidden mt-4 p-4 bg-red-100 text-red-800 rounded">
-                <p>En feil oppstod under generering av filer.</p>
             </div>
         </div>
     </div>

@@ -83,6 +83,51 @@ h1 i {
   padding: 36px;
   width: 100%;
   border: 1px solid var(--glass-border);
+  position: relative;
+  padding-top: 56px;
+}
+
+/* Tabs */
+.tabs {
+  position: absolute;
+  top: -18px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  z-index: 2;
+}
+
+.tab-btn {
+  flex: 0 1 auto;
+  padding: 10px 14px;
+  border-radius: 14px 14px 10px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.tab-btn.active {
+  background: linear-gradient(180deg, #0A84FF 0%, var(--ios-blue) 100%);
+  color: #fff;
+  border-color: rgba(0, 122, 255, 0.55);
+  border-bottom-color: transparent;
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.28);
+  transform: translateY(2px);
 }
 
 /* Form Elements */
@@ -98,6 +143,14 @@ h1 i {
   color: rgba(0, 0, 0, 0.5);
   /*text-transform: uppercase;*/
   letter-spacing: 0.8px;
+}
+
+.form-hint-list {
+  margin: -6px 0 12px 18px;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 input[type="text"],

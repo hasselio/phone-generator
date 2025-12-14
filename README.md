@@ -18,10 +18,12 @@ Et program for å generere konfigurasjonsfiler for Helselogistikk. Denne applika
   ```
 
 ### 📊 Rollemapping (valgfritt)
-- Last opp xlsx-fil med rollenavn i kolonne A
+- Last opp xlsx-fil med:
+  - **Kolonne A**: Fornavn (firstname)
+  - **Kolonne B**: Etternavn (lastname) - brukes som HL-kode hvis utfylt
 - Genererer automatisk regneark med:
-  - **Kolonne A**: Rollenavn (fra opplastet fil)
-  - **Kolonne B**: HL [KODE] (f.eks. "HL VVHF")
+  - **Kolonne A**: Navn (fra opplastet fil)
+  - **Kolonne B**: HL-kode (fra kolonne B i import, eller standard "HL [KODE]")
   - **Kolonne C**: Telefonnummer
   - **Kolonne D**: Generert passord
 
@@ -74,7 +76,7 @@ python app.py
 ### 2. Generer filer
 1. **Foretakskode**: Skriv inn kode (f.eks. VVHF, OUS, LAB)
 2. **Nummerserie**: Velg start- og sluttnummer
-3. **Rollenavn (valgfritt)**: Last opp xlsx-fil med rollenavn i kolonne A
+3. **Navn (valgfritt)**: Last opp xlsx-fil med fornavn i kolonne A og etternavn/HL-kode i kolonne B
 4. Klikk "Generer Filer"
 
 ### 3. Last ned
@@ -113,6 +115,7 @@ phone-generator/
 ├── app.py                # Hovedapplikasjonen
 ├── requirements.txt      # Avhengigheter
 ├── README.md             # Denne filen
+├── .gitignore            # Git ignore-fil
 ├── static/
 │   ├── css/
 │   │   └── style.css    # iOS 26 Glassmorphism stil

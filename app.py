@@ -10,10 +10,6 @@ from openpyxl import Workbook, load_workbook
 
 app = Flask(__name__)
 
-# Ensure output directories exist
-os.makedirs('avaya', exist_ok=True)
-os.makedirs('ascom', exist_ok=True)
-
 def generate_secure_password(length=15):
     # Define character sets (no special characters)
     lowercase = string.ascii_lowercase
@@ -45,29 +41,38 @@ def generate_files():
     # Handle both FormData and JSON
     if request.content_type and 'multipart/form-data' in request.content_type:
         code = request.form.get('code', '').strip().lower()
-        start_num = int(request.form.get('start', 0))
-        end_num = int(request.form.get('end', 0))
+        try:
+            start_num = int(request.form.get('start', 0))
+            end_num = int(request.form.get('end', 0))
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Ugyldig start- eller sluttnummer.'}), 400
         role_file = request.files.get('roleFile')
     else:
         data = request.get_json()
         code = data.get('code', '').strip().lower()
-        start_num = int(data.get('start', 0))
-        end_num = int(data.get('end', 0))
+        try:
+            start_num = int(data.get('start', 0))
+            end_num = int(data.get('end', 0))
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Ugyldig start- eller sluttnummer.'}), 400
         role_file = None
     
     # Validate input
-    if not code or start_num >= end_num or not code.strip():
+    if not code or start_num > end_num or not code.strip():
         return jsonify({'error': 'Vennligst fyll ut alle feltene korrekt. Kode er påkrevd.'}), 400
     
-    # Read role names from xlsx if provided
+    # Read role names and HL codes from xlsx if provided
     role_names = []
+    hl_codes = []
     if role_file:
         try:
             wb = load_workbook(role_file)
             ws = wb.active
-            for row in ws.iter_rows(min_col=1, max_col=1, values_only=True):
+            for row in ws.iter_rows(min_col=1, max_col=2, values_only=True):
                 if row[0]:
                     role_names.append(str(row[0]))
+                    # Use column B value if present, otherwise empty string
+                    hl_codes.append(str(row[1]) if len(row) > 1 and row[1] else '')
         except Exception as e:
             return jsonify({'error': f'Kunne ikke lese xlsx-fil: {str(e)}'}), 400
     
@@ -89,13 +94,16 @@ def generate_files():
             # Generate cryptographically secure password
             password = generate_secure_password()
             
-            # Get role name if available
+            # Get role name and HL code if available
             role_name = role_names[i-1] if i-1 < len(role_names) else ''
+            # Use imported HL code if available, otherwise use default
+            imported_hl_code = hl_codes[i-1] if i-1 < len(hl_codes) and hl_codes[i-1] else ''
+            hl_code = imported_hl_code if imported_hl_code else f'HL {code.upper()}'
             
             # Store data for output xlsx
             output_data.append({
                 'role_name': role_name,
-                'hl_code': f'HL {code.upper()}',
+                'hl_code': hl_code,
                 'number': number,
                 'password': password
             })

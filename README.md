@@ -40,7 +40,7 @@ Applikasjonen genererer samtidig et output-regneark (`.xlsx`) med kolonner:
 ### 🔐 Sikkerhet
 - Passord genereres med `secrets`-modulen (kryptografisk sikker)
 - Kun tall, store og små bokstaver (ingen spesialtegn)
-- Maks lengde: 15 tegn
+- Lengde: 10 tegn
 - Minst én av hver: liten bokstav, stor bokstav, siffer
 
 ### 🎨 Design
@@ -59,7 +59,7 @@ Applikasjonen genererer samtidig et output-regneark (`.xlsx`) med kolonner:
 Forhåndsvisning av applikasjonen:
 
 <div align="center">
-  <img src="./static/images/bilde.png" alt="Screenshot av Settingfil-generator" width="600" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+  <img src="./static/resources/bilde.png" alt="Screenshot av Settingfil-generator" width="600" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
 </div>
 
 ## Installasjon
@@ -114,11 +114,38 @@ Klikk **Generer Filer**.
 
 ZIP-filen navngis: `code_start_end_yyyymmddHHMM.zip`
 
+### 📄 Excel-mal (output)
+
+Applikasjonen bruker en Excel-mal som ligger her:
+
+- `static/resources/mal.xlsx`
+
+Ved generering lages output-regnearket ved å kopiere malen (alle ark, headere og formler bevares) og kun fylle inn verdier i arket **Basic**.
+
+- Header antas å være på rad 10
+- Første datarad er alltid rad 11
+
+Feltmapping i **Basic** (per rad):
+
+- A: `firstname`
+- B: `firstname`
+- C: `hl_code`
+- D: `hl_code`
+- E: `{number}@sikt.sykehuspartner.no`
+- H: `{firstname}, {hl_code}`
+- I: `{firstname}, {hl_code}`
+- K: `password`
+- M: `Helselogistikk plastikknummer`
+- P: `da`
+- Q: `(+2:0)Amsterdam, Berlin, Rome, Belgrade, Prague, Brussels, Sarajevo`
+- T: `UNASSIGNED`
+- U: `true`
+
 ### 3. Last ned
 Når genereringen er ferdig, lastes ned en ZIP-fil som inneholder:
 - `/avaya/` - Alle `.phn`-filer
 - `/ascom/` - Alle `.json`-filer  
-- `output_[kode].xlsx` - Regneark med output
+- `<samme-navn-som-zip>.xlsx` - Regneark basert på malen
 
 ## Teknologi
 
@@ -156,8 +183,9 @@ phone-generator/
 │   │   └── style.css    # iOS 26 Glassmorphism stil
 │   ├── js/
 │   │   └── script.js    # Klientdelslogikk med filopplasting
-│   └── images/
-│       └── bilde.png    # Skjermbilde av applikasjonen
+│   └── resources/
+│       ├── bilde.png    # Skjermbilde av applikasjonen
+│       └── mal.xlsx     # Excel-mal for output
 └── templates/
     └── index.html       # Hovedmal med filopplasting
 ```

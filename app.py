@@ -13,6 +13,49 @@ from decimal import Decimal, InvalidOperation
 
 app = Flask(__name__)
 
+AUTOFILL_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'static', 'resources', 'mal.xlsx')
+
+
+def _load_autofill_template_workbook():
+    if not os.path.exists(AUTOFILL_TEMPLATE_PATH):
+        raise FileNotFoundError(f"Fant ikke malfilen: {AUTOFILL_TEMPLATE_PATH}")
+    return load_workbook(AUTOFILL_TEMPLATE_PATH, data_only=False)
+
+
+def _get_basic_sheet(wb):
+    if 'Basic' not in wb.sheetnames:
+        raise KeyError("Fant ikke arket 'Basic' i malen.")
+    return wb['Basic']
+
+
+def _find_first_empty_row(ws, check_col_letter='A', start_row=2, max_scan_rows=1000):
+    col = ws[check_col_letter]
+    max_row = min(ws.max_row or 0, max_scan_rows)
+    for r in range(start_row, max_row + 1):
+        if ws[f'{check_col_letter}{r}'].value in (None, ''):
+            return r
+    return max_row + 1
+
+
+def _fill_basic_row(ws, row_idx, firstname, hl_code, number, password):
+    email = f"{number}@sikt.sykehuspartner.no"
+    combined = f"{firstname}, {hl_code}".strip().strip(',')
+
+    ws[f'A{row_idx}'] = firstname
+    ws[f'B{row_idx}'] = firstname
+    ws[f'C{row_idx}'] = hl_code
+    ws[f'D{row_idx}'] = hl_code
+    ws[f'E{row_idx}'] = email
+    ws[f'H{row_idx}'] = combined
+    ws[f'I{row_idx}'] = combined
+    ws[f'K{row_idx}'] = password
+    ws[f'M{row_idx}'] = 'Helselogistikk plastikknummer'
+    ws[f'P{row_idx}'] = 'da'
+    ws[f'Q{row_idx}'] = '(+2:0)Amsterdam, Berlin, Rome, Belgrade, Prague, Brussels, Sarajevo'
+    ws[f'T{row_idx}'] = 'UNASSIGNED'
+    ws[f'U{row_idx}'] = True
+
+
 def normalize_imei(value):
     if value is None:
         return None
@@ -46,13 +89,12 @@ def normalize_imei(value):
     except (InvalidOperation, ValueError):
         return None
 
-def generate_secure_password(length=15):
-    # Define character sets (no special characters)
+
+def generate_secure_password(length=10):
     lowercase = string.ascii_lowercase
     uppercase = string.ascii_uppercase
     digits = string.digits
-    
-    # Ensure at least one character from each set
+
     password = [
         secrets.choice(lowercase),
         secrets.choice(uppercase),
@@ -68,9 +110,11 @@ def generate_secure_password(length=15):
     secrets.SystemRandom().shuffle(password)
     return ''.join(password)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/generate_single', methods=['POST'])
 def generate_single_file():
@@ -115,7 +159,7 @@ def generate_single_file():
     os.makedirs('avaya', exist_ok=True)
     os.makedirs('ascom', exist_ok=True)
 
-    password = generate_secure_password()
+    password = generate_secure_password(10)
 
     phn_content = f"SET SIPUSERNAME {phone}\nSET SIPUSERPASSWORD {password}\nGET /mdm/{code}/avaya/rw-sikt.txt"
     phn_filename = f"{imei}.phn"
@@ -127,24 +171,26 @@ def generate_single_file():
     with open(f"ascom/{json_filename}", 'w') as f:
         json.dump(json_content, f, indent=2)
 
-    output_wb = Workbook()
-    output_ws = output_wb.active
-    output_ws.title = 'Rollemapping'
-    output_ws['A1'] = 'FIRSTNAME'
-    output_ws['B1'] = 'LASTNAME'
-    output_ws['C1'] = 'Nummer'
-    output_ws['D1'] = 'Passord'
-    output_ws['A2'] = firstname
-    output_ws['B2'] = lastname
-    output_ws['C2'] = phone
-    output_ws['D2'] = password
+    try:
+        output_wb = _load_autofill_template_workbook()
+        basic_ws = _get_basic_sheet(output_wb)
+        start_row = 11
+        _fill_basic_row(
+            basic_ws,
+            start_row,
+            firstname=firstname,
+            hl_code=lastname,
+            number=phone,
+            password=password
+        )
+    except Exception as e:
+        return jsonify({'error': f'Kunne ikke bruke Excel-mal: {str(e)}'}), 400
 
-    output_xlsx_path = f"output_{code}.xlsx"
-    output_wb.save(output_xlsx_path)
-
-    temp_zip = f"temp_single_{secrets.token_hex(4)}.zip"
     timestamp = datetime.now().strftime('%Y%m%d%H%M')
+    temp_zip = f"temp_single_{secrets.token_hex(4)}.zip"
     download_zip_name = f"{code}_{phone}_{timestamp}.zip"
+    output_xlsx_path = download_zip_name.replace('.zip', '.xlsx')
+    output_wb.save(output_xlsx_path)
 
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zf:
@@ -169,6 +215,7 @@ def generate_single_file():
         'download_url': f"/download/{temp_zip}?download_name={download_zip_name}",
         'filename': download_zip_name
     })
+
 
 @app.route('/generate', methods=['POST'])
 def generate_files():
@@ -249,21 +296,23 @@ def generate_files():
         # Generate files
         if role_file:
             for i, (imei, role_name, row_code) in enumerate(zip(imeis, role_names, imported_codes), 1):
-                password = generate_secure_password()
+                password = generate_secure_password(10)
+
+                phone_number = start_num + (i - 1)
 
                 output_data.append({
                     'role_name': role_name,
                     'hl_code': row_code,
-                    'number': imei,
+                    'number': phone_number,
                     'password': password
                 })
 
-                phn_content = f"SET SIPUSERNAME {imei}\nSET SIPUSERPASSWORD {password}\nGET /mdm/{row_code}/avaya/rw-sikt.txt"
+                phn_content = f"SET SIPUSERNAME {phone_number}\nSET SIPUSERPASSWORD {password}\nGET /mdm/{row_code}/avaya/rw-sikt.txt"
                 phn_filename = f"{imei}.phn"
                 with open(f"avaya/{phn_filename}", 'w') as f:
                     f.write(phn_content)
 
-                json_content = {"voip_device_id": imei}
+                json_content = {"voip_device_id": str(phone_number)}
                 json_filename = f"{imei}.json"
                 with open(f"ascom/{json_filename}", 'w') as f:
                     json.dump(json_content, f, indent=2)
@@ -274,7 +323,7 @@ def generate_files():
         else:
             for i, number in enumerate(range(start_num, end_num + 1), 1):
                 # Generate cryptographically secure password
-                password = generate_secure_password()
+                password = generate_secure_password(10)
                 
                 # Get role name and HL code if available
                 role_name = role_names[i-1] if i-1 < len(role_names) else ''
@@ -306,26 +355,27 @@ def generate_files():
                     progress = int((i / total_files) * 100)
                     yield f"data: {json.dumps({'progress': progress})}\n\n"
         
-        # Create output xlsx with role mappings
-        output_wb = Workbook()
-        output_ws = output_wb.active
-        output_ws.title = 'Rollemapping'
-        
-        # Add headers
-        output_ws['A1'] = 'FIRSTNAME'
-        output_ws['B1'] = 'LASTNAME'
-        output_ws['C1'] = 'Nummer'
-        output_ws['D1'] = 'Passord'
-        
-        # Add data
-        for idx, data_row in enumerate(output_data, start=2):
-            output_ws[f'A{idx}'] = data_row['role_name']
-            output_ws[f'B{idx}'] = data_row['hl_code']
-            output_ws[f'C{idx}'] = data_row['number']
-            output_ws[f'D{idx}'] = data_row['password']
+        # Create output xlsx from template and fill only Basic sheet
+        try:
+            output_wb = _load_autofill_template_workbook()
+            basic_ws = _get_basic_sheet(output_wb)
+            start_row = 11
+
+            for offset, data_row in enumerate(output_data):
+                _fill_basic_row(
+                    basic_ws,
+                    start_row + offset,
+                    firstname=data_row.get('role_name', ''),
+                    hl_code=data_row.get('hl_code', ''),
+                    number=data_row.get('number', ''),
+                    password=data_row.get('password', '')
+                )
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'Kunne ikke bruke Excel-mal: {str(e)}'})}\n\n"
+            return
         
         # Save output xlsx
-        output_xlsx_path = f"output_{code if code else 'import'}.xlsx"
+        output_xlsx_path = download_zip_name.replace('.zip', '.xlsx')
         output_wb.save(output_xlsx_path)
         
         # Create zip file
